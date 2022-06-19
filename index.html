@@ -1,0 +1,131 @@
+<html>
+
+<head>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    let gameCanvas = document.getElementById("gameCanvas");
+    gameCanvas.width = window.innerWidth;
+    gameCanvas.height = window.innerHeight - 50;
+    gameCanvas.style.background = "#222";
+
+    let ctx = gameCanvas.getContext("2d")
+    let timer = 0
+    let startTimer = 4
+    let gameSpeed = 5
+    let gameStatus = true
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+    }
+
+    function updateTimer() {
+      ctx.font = "30px Segoe UI"
+      ctx.fillStyle = "#fff"
+      ctx.fillText("Sua pontuação atual: " + parseInt(timer), 20, gameCanvas.height - 20)
+      timer += 1 / 5
+
+      if (timer > 50) gameSpeed = 10
+      if (timer > 100) gameSpeed = 15
+      if (timer > 150) gameSpeed = 20
+      if (timer > 200) gameSpeed = 30
+      if (timer > 250) gameSpeed = 40
+      if (timer > 300) gameSpeed = 50
+      if (timer > 500) gameSpeed = 70
+    }
+
+    function updateCanvas() {
+      if (!gameStatus) {
+        window.clearInterval(interval)
+      }
+      clearCanvas()
+      if (startTimer > 1) {
+        showStartTimer()
+      } else {
+        spawnEnemies()
+        updateTimer()
+      }
+    }
+
+    let interval = setInterval(updateCanvas, 10);
+
+    let lastMousePos = {
+      x: 0,
+      y: 0
+    }
+
+    gameCanvas.addEventListener("mousemove", (evt) => {
+      lastMousePos = getMousePos(gameCanvas, evt)
+    })
+
+    function checkHit(mouse, enemy) {
+      if (
+        mouse.x > enemy.x && mouse.y > enemy.y &&
+        mouse.x < enemy.x + enemy.width && mouse.y < enemy.y + enemy.height
+      ) {
+        return true
+      }
+      return false
+    }
+
+    function getMousePos(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    function showStartTimer() {
+      ctx.font = "30px Segoe UI"
+      ctx.fillStyle = "#fff"
+      ctx.fillText(parseInt(startTimer), gameCanvas.width / 2, gameCanvas.height / 2)
+      startTimer -= 1 / 35
+    }
+
+    let enemyObjs = []
+    let colors = ["blue", "purple", "red", "yellow"]
+
+    function spawnEnemies() {
+      enemyObjs.forEach((enemy, index) => {
+        if (enemy.x > gameCanvas.width) {
+          enemyObjs.splice(index, 1)
+        }
+      })
+
+      while (enemyObjs.length < 10) {
+        let randomX = Math.floor(Math.random() * 500)
+        let randomY = Math.floor(Math.random() * gameCanvas.height)
+        let randomColorIndex = Math.floor(Math.random() * 4)
+        enemyObjs.push(new createEnemy(50, 50, colors[randomColorIndex], -randomX, randomY))
+      }
+
+      enemyObjs.forEach((enemy) => {
+        enemy.x += gameSpeed / 5
+        enemy.update()
+        if (checkHit(lastMousePos, enemy)) gameStatus = false
+      })
+
+    }
+
+    function createEnemy(width, height, color, x, y) {
+      this.width = width;
+      this.height = height;
+      this.x = x;
+      this.y = y;
+      this.update = function () {
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
+    }
+  </script>
+</body>
+
+</html>
